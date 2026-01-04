@@ -52,9 +52,9 @@ flowchart TD
     CustomerMsg --> Categorize
     FlightAPI --> Categorize
     
-    Categorize[2. Categorize & Prioritize<br/>LLM Classifier<br/>GPT-4o mini<br/>Urgency + Type]
+    Categorize[Categorize & Prioritize<br/>LLM Classifier<br/>GPT-4o mini<br/>Urgency + Type]
     
-    Categorize --> Context[3. Context Assembly<br/>RAG Pipeline]
+    Categorize --> Context[Context Assembly<br/>RAG Pipeline]
     
     Context --> VectorDB[(Vector Database<br/>KB + Laws + Rules<br/>Historical Cases)]
     VectorDB --> Context
@@ -64,32 +64,32 @@ flowchart TD
     
     FlightAPI -.cross-reference.-> BookingDB
     
-    Context --> Reasoning[4. LLM Reasoning<br/>Claude Sonnet<br/>+ Rule Book<br/>Synthesizes context<br/>Generates options<br/>Explains decisions]
+    Context --> Reasoning[LLM Reasoning<br/>Claude Sonnet<br/>+ Rule Book<br/>Synthesizes context<br/>Generates options<br/>Explains decisions]
     
     RuleBook[Rule Book<br/>Prompt-Injected<br/>Policy Guardrails<br/>Compliance Rules<br/>Version Controlled]
     RuleBook --> Reasoning
     
     Reasoning --> StructuredOutput[Structured Output<br/>• Options 1-4<br/>• Confidence scores<br/>• Reasoning<br/>• Policy citations<br/>• Escalation flags]
     
-    StructuredOutput --> Human[5. Human Decision<br/>Agent Dashboard<br/>Review options<br/>Approve/Modify/Reject]
+    StructuredOutput --> Human[Human Decision<br/>Agent Dashboard<br/>Review options<br/>Approve/Modify/Reject]
     
-    Human --> Execute[6. Execute Resolution<br/>Rebook/Refund/Compensate]
+    Human --> Execute[Execute Resolution<br/>Rebook/Refund/Compensate]
     Execute --> Customer([Customer<br/>Resolution Delivered])
     
     Human --> Learning[(Learning Loop<br/>Log decisions<br/>Improve model)]
     Learning -.feedback.-> Reasoning
     
-    style Start fill:#e1f5ff
-    style Categorize fill:#fff4e1
-    style Context fill:#e8f5e9
-    style VectorDB fill:#c8e6c9
-    style BookingDB fill:#c8e6c9
-    style RuleBook fill:#ffccbc
-    style Reasoning fill:#f3e5f5
-    style StructuredOutput fill:#fff9c4
-    style Human fill:#fff9c4
-    style Execute fill:#e8f5e9
-    style Customer fill:#4caf50,color:#fff
+    style Start fill:#2196F3,color:#fff
+    style Categorize fill:#FF9800,color:#fff
+    style Context fill:#4CAF50,color:#fff
+    style VectorDB fill:#81C784,color:#fff
+    style BookingDB fill:#66BB6A,color:#fff
+    style RuleBook fill:#FF7043,color:#fff
+    style Reasoning fill:#9C27B0,color:#fff
+    style StructuredOutput fill:#FFC107,color:#000
+    style Human fill:#FFC107,color:#000
+    style Execute fill:#4CAF50,color:#fff
+    style Customer fill:#4CAF50,color:#fff
 ```
 
 **Flow Steps:**
