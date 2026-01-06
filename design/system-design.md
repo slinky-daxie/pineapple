@@ -8,10 +8,13 @@
 1. [Overview](#overview)
 2. [System Architecture](#system-architecture)
 3. [Component Details](#component-details)
-4. [Data Flows](#data-flows)
-5. [Integration Points](#integration-points)
-6. [Error Handling](#error-handling)
-7. [Scalability Considerations](#scalability-considerations)
+4. [User Journeys](#user-journeys)
+5. [Integration Requirements](#integration-requirements)
+6. [Handling Failures](#handling-failures)
+7. [Scaling Considerations](#scaling-considerations)
+8. [Measuring Success](#measuring-success)
+9. [Security & Compliance](#security--compliance)
+10. [Future Enhancements](#future-enhancements)
 
 ---
 
@@ -110,77 +113,21 @@ flowchart TD
 
 ## System Architecture
 
-### High-Level Architecture
+### Key Dependencies
 
-```mermaid
-flowchart TB
-    subgraph external [External Systems]
-        API1[Flight Status APIs]
-        API2[Booking System]
-        API3[Customer Chat Platform]
-        API4[Airline APIs]
-    end
-    
-    subgraph ingestion [Ingestion Layer]
-        I1[Event Collector]
-        I2[Data Normalizer]
-    end
-    
-    subgraph detection [Detection & Triage]
-        D1[Event Processor]
-        D2[Urgency Scorer]
-        D3[Category Classifier]
-        D4[Priority Queue]
-    end
-    
-    subgraph context [Context Assembly RAG]
-        C1[Booking Retriever]
-        C2[Flight Status Enricher]
-        C3[Policy Search]
-        C4[Historical Case Finder]
-        C5[Customer Profile]
-        C6[Vector Store]
-    end
-    
-    subgraph reasoning [LLM Reasoning]
-        R1[Context Synthesizer]
-        R2[Option Generator]
-        R3[Policy Validator]
-        R4[Confidence Scorer]
-        R5[Explainer]
-    end
-    
-    subgraph human [Human Interface]
-        H1[Agent Dashboard]
-        H2[Approval Interface]
-        H3[Customer Communication]
-    end
-    
-    subgraph execution [Execution Layer]
-        E1[Rebooking Service]
-        E2[Refund Processor]
-        E3[Notification Service]
-    end
-    
-    subgraph learning [Learning & Analytics]
-        L1[Decision Logger]
-        L2[Outcome Tracker]
-        L3[Model Evaluator]
-        L4[Analytics Dashboard]
-    end
-    
-    external --> ingestion
-    ingestion --> detection
-    detection --> context
-    context --> reasoning
-    reasoning --> human
-    human --> execution
-    human --> learning
-    execution --> learning
-    learning -.feedback.-> reasoning
-    C6 --> C3
-    C6 --> C4
-```
+The system requires integration with several external systems and internal capabilities:
+
+**External Dependencies:**
+- **Flight status data** - Real-time monitoring of delays, cancellations, schedule changes
+- **Booking system** - Customer booking details, verification, modifications
+- **Customer communication channels** - Chat, email, SMS for inbound and outbound messaging
+- **Airline APIs** - For rebooking, availability checks, and execution
+
+**Internal Capabilities:**
+- **Knowledge base** - Policies, laws, regulations, historical resolutions
+- **LLM services** - Fast classifier (GPT-4o mini) and reasoning engine (Claude Sonnet)
+- **Agent dashboard** - Interface for reviewing and approving LLM suggestions
+- **Analytics platform** - Tracking decisions, outcomes, and continuous improvement
 
 ### Prototype Technology Stack
 
@@ -314,224 +261,292 @@ flowchart TB
 4. **Composability**: Components can be reused for other use cases (customer-facing apps, different channels)
 
 ---
-## Data Flows
+## User Journeys
 
-### Flow 1: Proactive Detection (Flight Delay)
+### Journey 1: Proactive Resolution (System Detects Issue First)
 
-```mermaid
-sequenceDiagram
-    participant FA as FlightAware API
-    participant IC as Ingestion
-    participant DT as Detection & Triage
-    participant CA as Context Assembly
-    participant LLM as Reasoning Engine
-    participant UI as Agent Dashboard
-    participant AG as Agent
-    
-    FA->>IC: Flight BA123 delayed 2.5h
-    IC->>DT: Normalized event
-    DT->>DT: Check affected bookings
-    DT->>DT: Calculate urgency (HIGH)
-    DT->>CA: Request context for booking KW123456
-    CA->>CA: Fetch booking, flights, policies, history
-    CA->>LLM: Assembled context bundle
-    LLM->>LLM: Generate resolution options
-    LLM->>UI: Display options with confidence
-    UI->>AG: Notification: High-priority case
-    AG->>UI: Review and approve Option 1
-    UI->>AG: Execute rebooking
-```
+**Scenario**: Flight delay detected before customer contacts us
 
-**Latency**:
-- Detection: <1 second
-- Context assembly: <1 second
-- LLM reasoning: <3 seconds
-- **Total: <5 seconds** from event to agent notification
+1. **System detects** disruption via flight status monitoring
+2. **System identifies** affected Pineapple Travel bookings automatically
+3. **System calculates** urgency (e.g., customer in-airport vs. tomorrow's flight)
+4. **System assembles** all relevant context (booking, alternatives, policies)
+5. **LLM generates** resolution options with reasoning
+6. **Agent receives** high-priority notification with pre-assembled options
+7. **Agent reviews** and approves best option (seconds, not minutes)
+8. **Customer contacted** proactively with solution before they even know there's a problem
 
-### Flow 2: Customer-Initiated Contact
-
-```mermaid
-sequenceDiagram
-    participant CU as Customer
-    participant CH as Chat Platform
-    participant DT as Detection & Triage
-    participant CA as Context Assembly
-    participant LLM as Reasoning Engine
-    participant AG as Agent
-    
-    CU->>CH: "I missed my connecting flight"
-    CH->>DT: Customer message + booking ID
-    DT->>DT: Extract booking, classify issue
-    DT->>CA: Request context
-    CA->>LLM: Context bundle
-    LLM->>AG: Options ready in dashboard
-    AG->>AG: Review (45 seconds)
-    AG->>CU: "We can rebook you on BA789..."
-    CU->>AG: "Yes please"
-    AG->>CU: Executes + confirms
-```
-
-**Target Experience**:
-- Customer wait time: Near-instant for first response template
-- Agent decision time: Significantly faster with pre-assembled context
-- **Goal**: Dramatic reduction in TTFR through automated context assembly
+**Why this matters**: Customers are impressed when we contact them first with solutions. Dramatically improves satisfaction for disrupted trips.
 
 ---
 
-## Integration Points
+### Journey 2: Reactive Resolution (Customer Contacts Us)
 
-### External APIs
+**Scenario**: Customer reaches out about a missed connection
 
-| System | Purpose | Protocol | SLA |
-|--------|---------|----------|-----|
-| FlightAware | Real-time flight status | REST API | 99.9% uptime |
-| Pineapple Travel Booking System | Booking data, modifications | Internal API | 99.95% uptime |
-| Airline APIs | Rebooking, availability | REST/SOAP | Varies by airline |
-| Payment Gateway | Refund processing | REST API | 99.9% uptime |
-| Customer Service Platform | Chat, email, SMS | Webhooks + API | 99.5% uptime |
+1. **Customer contacts** support via chat/email ("I missed my flight")
+2. **System categorises** issue type and urgency automatically
+3. **System assembles** context while agent greets customer
+4. **Agent sees** pre-loaded context + LLM-generated options (no hunting across systems)
+5. **Agent reviews** options quickly, approves or modifies
+6. **Agent responds** to customer with confidence and speed
+7. **Resolution executed** (rebooking, refund, etc.)
+8. **Customer satisfied** with fast, informed response
 
-### Authentication & Security
-- API keys rotated monthly
-- All customer data encrypted at rest and in transit
-- PCI DSS compliance for payment data
-- GDPR compliance for EU customers
-- Role-based access control (RBAC) for agents
+**Why this matters**: Agents can focus on empathy and customer interaction instead of data gathering. Significantly reduces time to first resolution.
 
 ---
 
-## Error Handling
+## Integration Requirements
 
-### LLM Failures
+### Critical Integrations
 
-**Failure Modes**:
-1. **Timeout** (>10s response)
-   - Retry once
-   - If fails again: Escalate to human without suggestions
-   
-2. **Invalid JSON** (parsing error)
-   - Log error with full context
-   - Retry with simplified prompt
-   - If fails: Escalate to human
+**Flight Status Monitoring**
+- **What we need**: Real-time data on delays, cancellations, gate changes
+- **Why it matters**: Enables proactive detection before customers contact us
+- **Dependency**: Third-party flight data providers (FlightAware, similar)
+- **Risk**: If this fails, system becomes reactive-only (still functional, but less proactive)
 
-3. **Policy Violation** (validator rejects)
-   - Log violation details
-   - Request alternative from LLM
-   - If persistent: Escalate to human
+**Booking System**
+- **What we need**: Customer booking details, verification, ability to modify bookings
+- **Why it matters**: Core to verifying customer claims and executing resolutions
+- **Dependency**: Pineapple Travel's internal booking platform
+- **Risk**: Critical dependency - if unavailable, agents must work manually
 
-4. **Hallucination** (suggests impossible option)
-   - Feasibility validator catches
-   - Log for model improvement
-   - Filter out invalid option
-   - If no valid options: Escalate
+**Airline APIs**
+- **What we need**: Availability checks, rebooking capabilities, seat selection
+- **Why it matters**: Execute approved resolutions automatically
+- **Dependency**: Varies by airline partner (some have APIs, others require manual work)
+- **Risk**: Inconsistent - may need manual fallback for some airlines
 
-**Fallback Strategy**:
-- Always degrade gracefully to human-only mode
-- Agent sees all context even if LLM fails
-- System never blocks human from working
+**Customer Communication Channels**
+- **What we need**: Inbound messages (chat, email) and outbound notifications (SMS, email)
+- **Why it matters**: How customers reach us and how we deliver resolutions
+- **Dependency**: Existing customer service platform
+- **Risk**: If down, can't communicate with customers (critical)
+
+### Security & Compliance Considerations
+- Customer data must be encrypted and access-controlled
+- Payment information requires PCI DSS compliance
+- EU customers protected under GDPR (right to deletion, data minimisation)
+- All decisions must be auditable for compliance and learning
+
+---
+
+## Handling Failures
+
+### Core Principle: Never Block the Human
+
+The system is designed to **augment agents, not replace them**. If any component fails, agents must still be able to do their job manually.
+
+### LLM Unavailability
+
+**What happens:**
+- Agent still sees all assembled context (booking, flight status, policies, history)
+- Agent works without LLM suggestions (how they work today)
+- System logs the failure for engineering to investigate
+
+**Why this approach:**
+- LLMs are powerful but not 100% reliable
+- Agents are the ultimate decision-makers
+- Service continues even if AI component fails
+
+**Product decision**: Prioritise availability over perfection
+
+---
 
 ### Integration Failures
 
-**Booking System Down**:
-- Queue cases until system recovers
-- Prioritise by urgency when back online
-- Manual workaround: Agent can enter data manually
+**Flight Status API Unavailable:**
+- System uses most recent cached data (if available)
+- Dashboard shows clear warning: "Flight data may be stale"
+- Agent can manually verify with airline if needed
+- Proactive detection is temporarily disabled, but reactive support continues
 
-**Flight API Down**:
-- Use cached flight data (if recent)
-- Display "Data may be stale" warning
-- Agent can manually verify
+**Booking System Unavailable:**
+- High impact - core system dependency
+- Cases queue automatically by urgency
+- When system recovers, highest-priority cases processed first
+- Manual workaround: Agent can look up booking details separately
+
+**Airline APIs Unavailable:**
+- LLM can still generate resolution options
+- Agent executes resolution manually (phone call to airline, etc.)
+- More time-consuming but doesn't block resolution
 
 ---
 
-## Scalability Considerations
+### LLM Quality Issues
 
-### Current MVP Scale
-- 100 cases/day
-- 5 concurrent agents
-- <$100/day in LLM costs
+**Hallucinations or Policy Violations:**
+- For MVP: Human-in-the-loop catches these
+- Agent sees reasoning and can reject if nonsensical
+- System logs instances for prompt improvement
+- Over time: Build validation rules to catch common errors
+
+**Low Confidence Suggestions:**
+- System surfaces confidence scores to agent
+- Low confidence = agent scrutinises more carefully
+- Option to escalate to senior agent or supervisor
+- Helps calibrate trust over time
+
+**Why this matters**: Building trust with agents is critical. They need to feel confident that the system helps, not hinders.
+
+---
+
+## Scaling Considerations
+
+### MVP Assumptions
+- **Volume**: ~100 disruption cases per day
+- **Team size**: 5-10 agents handling virtual interlining issues
+- **Cost target**: <£0.10 per case in LLM costs
 
 ### Growth Path
-| Metric | Phase 1 | Phase 2 | Phase 3 |
-|--------|---------|---------|---------|
-| Cases/day | 100 | 1,000 | 10,000 |
-| Agents | 5 | 50 | 200 |
-| Response time | <5s | <3s | <2s |
-| LLM cost/case | $0.05 | $0.03 | $0.01 |
 
-### Bottlenecks & Mitigations
+As the system proves value, we expect usage to scale:
 
-**LLM API rate limits**:
-- Cache repeated queries
-- Batch non-urgent cases
-- Self-hosted open-source models for classification
+| Phase | Daily Cases | Agent Team | Key Challenge |
+|-------|-------------|------------|---------------|
+| **Phase 1 (MVP)** | 100 | 5-10 | Prove value, build trust |
+| **Phase 2** | 1,000 | 50+ | Maintain quality at scale |
+| **Phase 3** | 10,000+ | 200+ | Cost optimisation, automation |
 
-**Vector search at scale**:
-- Shard by region/time
-- Approximate nearest neighbor (ANN)
-- Separate hot/cold data
+### Key Constraints
 
-**Database writes (decision logs)**:
-- Async logging (don't block agent)
-- Batch writes
-- Time-series database for analytics
+**LLM Costs**
+- Claude Sonnet is premium-priced but provides best reasoning quality
+- As volume grows, cost per case must decrease
+- Options: Caching repeated queries, faster models for simple cases, batch processing
+
+**Response Speed**
+- MVP target: Agent sees options within seconds
+- As volume grows, need to maintain fast response
+- Options: Parallel processing, pre-computation for predictable scenarios
+
+**Knowledge Base Maintenance**
+- Policies, regulations, and historical cases grow over time
+- Must keep retrieval fast and relevant
+- Options: Better indexing, relevance tuning, archiving old cases
+
+**Integration Dependencies**
+- More cases = more API calls to airlines, flight status providers
+- Rate limits and costs may become constraints
+- Options: Strategic caching, direct partnerships, redundancy
+
+### Why This Matters
+
+Scalability isn't just about technical performance - it's about **maintaining quality as we grow**. The system must remain helpful to agents even at 10x volume.
 
 ---
 
-## Monitoring & Observability
+## Measuring Success
 
-### Key Metrics
+### Success Metrics for MVP
 
-**System Health**:
-- Latency (p50, p95, p99) for each component
-- Error rates (LLM failures, API timeouts)
-- Queue depth and wait time
+**Agent Satisfaction (Primary)**
+- Do agents find the system helpful? (Survey: >4/5)
+- Are they approving LLM suggestions? (Target: >80%)
+- Are they saving time? (Qualitative feedback + observation)
 
-**Business Metrics**:
-- Time to First Resolution (TTFR)
-- Agent approval rate
-- Customer CSAT (per resolution type)
-- Cost per resolution
-- Repeat contact rate
+**Customer Outcomes**
+- Time to First Resolution (TTFR) - how much faster compared to baseline?
+- Customer satisfaction (CSAT) for disrupted trips - does it improve?
+- Repeat contact rate - are we solving problems fully the first time?
 
-**ML Metrics**:
-- Confidence calibration
-- Hallucination rate
-- Policy compliance rate
-- Similar case retrieval accuracy
+**System Performance**
+- Hallucination rate - is the LLM generating valid options? (Target: <2%)
+- Confidence calibration - when LLM is confident, is it usually right?
+- Cost per case - staying within budget? (Target: <£0.10)
 
-### Alerts
+**Learning Indicators**
+- Are we collecting good training data from agent decisions?
+- Can we identify patterns in approvals vs rejections?
+- Is the system improving over time as it learns?
 
-**Critical** (page on-call):
-- System down >5 minutes
-- Error rate >10%
-- High-urgency cases waiting >10 minutes
+---
 
-**Warning** (email team):
-- Agent approval rate drops below 70%
-- LLM latency p95 >5 seconds
-- Cost per case exceeds budget by 20%
+### What to Monitor Continuously
+
+**Agent Experience:**
+- How often do agents approve vs modify vs reject options?
+- Which types of cases work well vs struggle?
+- Are agents waiting too long for suggestions?
+
+**LLM Behaviour:**
+- Is it citing policies correctly?
+- Are confidence scores meaningful to agents?
+- Are there systematic errors or gaps in knowledge?
+
+**Business Impact:**
+- Cost per resolution (LLM + execution)
+- Overall CSAT trend for disrupted customers
+- Agent productivity (cases per hour)
+
+**Integration Health:**
+- Are flight status updates timely?
+- Are bookings being retrieved successfully?
+- Are resolution executions (rebookings, refunds) working?
+
+---
+
+### Red Flags to Watch For
+
+- **Agent approval rate drops suddenly** → System may have regressed, needs investigation
+- **High-urgency cases delayed** → Prioritisation not working, immediate fix needed
+- **CSAT declining** → Resolutions may not be meeting customer needs
+- **Costs increasing unexpectedly** → LLM usage may need optimisation
+
+**Why this matters**: MVP is about learning and iteration. Good metrics tell us what's working and what needs improvement.
 
 ---
 
 ## Security & Compliance
 
-### Data Privacy
-- Customer PII encrypted at rest (AES-256)
-- PII redacted from LLM prompts where possible
-- Audit log of all PII access
-- Right to deletion supported (GDPR)
+### Data Privacy Principles
 
-### Compliance
-- **EU261**: System enforces passenger rights
-- **PCI DSS**: Payment data handling compliant
-- **GDPR**: Data minimization, consent tracking
-- **Internal**: All decisions auditable
+**Customer data protection:**
+- All customer information must be encrypted and access-controlled
+- Sensitive data (PII) minimised in LLM prompts where possible
+- Full audit trail of who accessed what customer data and when
+- Customers' right to deletion must be supported (GDPR requirement)
+
+**Why this matters**: We're handling sensitive booking, payment, and personal information. Any data breach would be catastrophic for trust.
+
+---
+
+### Regulatory Compliance
+
+**EU261 (Passenger Rights):**
+- System must recommend resolutions that comply with EU passenger rights regulations
+- Prompt-injected rule book includes EU261 requirements
+- Agents can cite specific regulations when explaining decisions to customers
+
+**Payment Handling (PCI DSS):**
+- Refund processing must comply with payment card industry standards
+- Payment information never stored in LLM context or logs
+
+**Data Protection (GDPR):**
+- Collect only necessary customer data (data minimisation)
+- Track consent for data usage
+- Support customer requests to delete their data
+- All decisions must be explainable to customers if requested
+
+**Internal Auditability:**
+- Every decision logged with full reasoning
+- Managers can review agent actions and LLM suggestions
+- Critical for quality control and continuous improvement
+
+---
 
 ### Access Control
-- Agents: Read access to assigned cases only
-- Senior agents: Can override system recommendations
-- Managers: Full audit log access
-- Engineers: Anonymized data only for model improvement
+
+**Principle of least privilege:**
+- Agents see only cases assigned to them
+- Senior agents can override system recommendations when needed
+- Managers have audit access to review performance and quality
+- Engineers work with anonymised data for model improvement (no customer PII)
+
+**Why this matters**: Limits potential damage from any security breach or misuse.
 
 ---
 
