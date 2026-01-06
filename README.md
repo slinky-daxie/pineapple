@@ -54,27 +54,35 @@ Flight APIs + Customer Contact
 
 ## What's in the Docs?
 
-📁 **[`design/system-overview.md`](design/system-overview.md)** 
+📁 **[`design/system-overview.md`](design/system-overview.md)** - Full system design
    - Architecture diagrams, user journeys, integration requirements
    - Failure handling, scaling considerations, metrics
+
+📁 **[`design/agentic-flow-v1.md`](design/agentic-flow-v1.md)** - Visual flow diagram  
+   - Mermaid diagram showing end-to-end case processing
+   - Step-by-step walkthrough
 
 📁 **[`brainstorm/decision-log.md`](brainstorm/decision-log.md)** - Technical decisions with rationale  
    - Why Claude over GPT-4? Why RAG over fine-tuning? Why multi-model?
    - Shows decision-making process, not just outcomes
 
-📁 **[`agentic-flow-v1`](design/agentic-flow-v1.md)** - Visual flow diagram  
-   - Mermaid diagram showing end-to-end case processing
-   - Step-by-step walkthrough
+📁 **[`langflow/`](langflow/)** - **Working prototype** ⭐  
+   - LangFlow flow demonstrating RAG pipeline with sample policies
+   - Test prompts and verification scripts
+   - Proves core concept works: LLM accurately answers policy questions
+
+📁 **[`data/`](data/)** - Sample data for prototype  
+   - Policy documents (guarantee terms, EU261, refunds, rule book)
+   - Sample bookings and test cases
 
 ---
 
 ## Why I Built This
 
-Wanted to understand modern AI product development beyond "add ChatGPT":
-- Which LLM decisions actually matter?
-- How do you balance innovation with safety?
-- What makes AI useful vs frustrating for end users?
-- How do technical constraints shape product strategy?
+- Practical research on LLM decisions and if it matters
+- Balancing innovation with safety
+- Discover what makes AI useful vs frustrating for end users
+- How to augment the human expereicne with AI
 
 **Personal project** - No real bookings, flights, or customers. Just deep thinking about AI product design.
 
