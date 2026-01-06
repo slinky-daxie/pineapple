@@ -182,22 +182,20 @@ flowchart TB
     C6 --> C4
 ```
 
-### Technology Stack (Proposed)
+### Prototype Technology Stack
+
+*Note: This section describes the minimal technology stack for building a working prototype/demo. In production, all technology decisions would be made by the engineering team based on scale, performance, and infrastructure requirements.*
 
 | Component | Technology | Rationale |
 |-----------|-----------|-----------|
-| **Orchestration** | LangFlow / LangChain | Visual pipeline building, rapid prototyping |
-| **Vector Store** | Qdrant or Weaviate | Open-source, scalable, good performance |
-| **Embeddings** | bge-large-en-v1.5 | SOTA open-source, cost-effective |
-| **Keyword Search** | Elasticsearch | Industry standard, proven at scale |
+| **Orchestration** | LangFlow | Visual pipeline building, rapid prototyping (demo only) |
+| **Vector Store** | ChromaDB | Simple, local-first, easy setup for prototype |
+| **Embeddings** | OpenAI text-embedding-3-small | API-based, no infrastructure needed |
 | **Fast LLM** | GPT-4o mini | Speed + cost for classification |
 | **Reasoning LLM** | Claude 3.5 Sonnet | Best reasoning quality + explainability |
 | **Rule Book** | Markdown + Git | Version controlled, auditable, fast iteration |
-| **Backend** | Python/FastAPI | Fast development, great LLM ecosystem |
-| **Frontend** | React + TypeScript | Agent dashboard needs interactivity |
-| **Database** | PostgreSQL | Structured data, audit logs, booking records |
-| **Queue** | Redis | Fast priority queue for cases |
-| **Monitoring** | Datadog / New Relic | Observability for LLM systems |
+
+*For prototype: No backend/frontend framework, database, queue, or monitoring infrastructure needed. Simple Python scripts and LangFlow UI sufficient to demonstrate core concepts.*
 
 ---
 
