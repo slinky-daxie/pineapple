@@ -1,4 +1,4 @@
-# System Design: Agent-Assisted CS Resolution System
+# System Overview: Agent-Assisted CS Resolution System
 
 *Agent-assisted customer support system for virtual interlining failure resolution at Pineapple Travel*
 
@@ -26,6 +26,14 @@ Pineapple Travel's virtual interlining creates complex failure scenarios (missed
 - Responsibility is ambiguous
 - Resolutions are inconsistent and slow
 - Support agents lack context and decision support
+
+**Research Insight**: Customer reviews reveal that dissatisfaction spikes during disruptions, not smooth trips. Key themes:
+- "Customers say the guarantee covers nothing" → transparency gap
+- "Left stranded in airports" → need for proactive, urgent response
+- "Support agents hide behind policy" → need for clear reasoning and empowerment
+- "Months waiting for refunds" → need for fast, consistent resolutions
+
+This system directly addresses these pain points through transparent reasoning, proactive detection, and agent empowerment
 
 ### Solution
 An LLM-powered agent-assistance system that:
@@ -276,7 +284,7 @@ The system requires integration with several external systems and internal capab
 7. **Agent reviews** and approves best option (seconds, not minutes)
 8. **Customer contacted** proactively with solution before they even know there's a problem
 
-**Why this matters**: Customers are impressed when we contact them first with solutions. Dramatically improves satisfaction for disrupted trips.
+**Why this matters**: Research shows customers are "left stranded in airports" when issues arise. Proactive detection with pre-assembled options means agents can respond in minutes, not hours—critical for in-airport emergencies. Transforms the experience from reactive firefighting to proactive assistance.
 
 ---
 
@@ -293,7 +301,7 @@ The system requires integration with several external systems and internal capab
 7. **Resolution executed** (rebooking, refund, etc.)
 8. **Customer satisfied** with fast, informed response
 
-**Why this matters**: Agents can focus on empathy and customer interaction instead of data gathering. Significantly reduces time to first resolution.
+**Why this matters**: Research reveals agents are perceived as "powerless" and "hiding behind policy." Pre-assembled context + LLM reasoning with policy citations empowers agents to give confident, explained answers instead of scripted responses. Transforms agents from gatekeepers to problem-solvers.
 
 ---
 
