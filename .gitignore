@@ -8,5 +8,5 @@ build/
 .idea/
 
 # LangFlow implementation notes (personal)
-langflow.md
+langflow/langflow-plan.md
 chroma_db/
