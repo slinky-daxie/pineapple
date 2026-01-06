@@ -31,15 +31,15 @@ From large review platforms (Trustpilot, BBB, Reviews.io) and travel forums, the
   - Some feel the interface or wording of insurance/refund options makes coverage seem broader than it is.[2][12][10]
 
 - **Ticketing / booking errors**  
-  - There are cases of name mistakes, e-ticket issues, and app display problems that led to check‑in trouble or even missed flights, with Kiwi then refusing full compensation.[1][2][7][13]
+  - There are cases of name mistakes, e-ticket issues, and app display problems that led to check‑in trouble or even missed flights, with agencies then refusing full compensation.[1][2][7][13]
   - Customers sometimes only discover multiple separate bookings or changed dates after digging into airline systems directly.[1][7][8]
 
 ## Satisfaction with resolutions
 
-Most travelers describing problems with Kiwi’s customer service say they were unsatisfied with the resolution.[1][5][6][2][3]
+Most travelers describing problems with customer service say they were unsatisfied with the resolution.[1][5][6][2][3]
 
 - Negative themes:  
-  - Resolutions often involve partial refunds, Kiwi credit instead of cash, or denials based on Kiwi’s own terms, which many customers feel are unfair or misleading.[5][6][2][7][8]
+  - Resolutions often involve partial refunds, agency credit instead of cash, or denials based on agency terms, which many customers feel are unfair or misleading.[5][6][2][7][8]
   - People frequently say support “takes no responsibility” and “hides behind policy,” even when the issue appears to be an agency/itinerary error.[3][11][10]
 
 - Positive but minority experiences:  
@@ -158,4 +158,4 @@ Sources
 - Missed connections, especially on self-transfer itineraries, often leave customers stranded with agencies disclaiming responsibility.
 - Support agents appear powerless to override system decisions or take ownership, frequently "hiding behind policy" even when errors are clear.
 - Satisfaction is high when trips run smoothly but drops sharply when disruptions occur, indicating a reactive rather than proactive support model.
-- Transparency issues include surprise fees, currency confusion, and unclear responsibilities between Kiwi and airlines.
+- Transparency issues include surprise fees, currency confusion, and unclear responsibilities between agencies and airlines.
