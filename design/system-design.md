@@ -201,575 +201,119 @@ flowchart TB
 
 ## Component Details
 
-### 1. Ingestion Layer
+*Note: This section outlines the conceptual components and their purpose. Technical implementation details would be determined by the engineering team.*
 
-**Purpose**: Collect events from multiple sources and normalize into standard format
+### 1. Event Detection & Intake
 
-**Components**:
-- **Event Collector**: Webhooks, polling, message queue subscriptions
-- **Data Normalizer**: Convert diverse formats to internal schema
+**What it does**: Captures disruption signals from multiple sources and determines what needs attention
 
-**Event Types**:
-```json
-{
-  "event_type": "flight_delay|missed_connection|schedule_change|customer_contact",
-  "timestamp": "2026-01-07T14:30:00Z",
-  "booking_id": "KW123456",
-  "flight_numbers": ["BA123", "EI456"],
-  "urgency_hint": "high|medium|low",
-  "source": "flight_api|customer|system",
-  "raw_data": {}
-}
-```
+**Key Sources**:
+- Flight status APIs (proactive detection before customer knows)
+- Customer-initiated contact (reactive - they're already aware)
+- Booking system changes (schedule updates, cancellations)
 
-**Integration Points**:
-- FlightAware / FlightStats API (polling every 5 min for active bookings)
-- Pineapple Travel booking system (webhooks on changes)
-- Customer service platform (chat/email webhooks)
+**Critical Decision**: How do we prioritise?
+- **Urgency-based**, not first-come-first-served
+- Factors: Time to departure, customer location, booking value, guarantee status
+- Critical (in-airport) cases surface immediately; future issues can wait
+
+**Why this matters**: Customers in airports need responses in minutes, not hours. The system must understand context to prioritise appropriately.
 
 ---
 
-### 2. Detection & Triage
+### 2. Context Assembly & Verification
 
-**Purpose**: Identify failures, assess urgency, categorise, and prioritise
+**What it does**: Gathers everything an agent needs to make an informed decision, automatically
 
-#### Urgency Scorer (GPT-4o mini)
+**What gets pulled together**:
+- **Booking verification**: Does this booking exist? Does the customer have standing?
+- **Flight status**: Real-time data on delays, cancellations, alternatives
+- **Policy lookup**: Which rules apply? Guarantee coverage, refund eligibility, EU261 rights
+- **Historical cases**: How have we resolved similar situations before?
+- **Customer context**: Tier, previous issues, lifetime value
 
-**Inputs**:
-- Event data
-- Current time vs departure time
-- Customer location (if available)
-- Booking value
+**Critical Decision**: Cross-reference flight status with bookings
+- Enables proactive detection: "Flight BA123 delayed → which of our customers are affected?"
+- Prevents fraud: Verify claims match actual bookings
+- Provides complete picture: Don't just trust what customer says, validate
 
-**Output**:
-```json
-{
-  "urgency": "critical|high|medium|low",
-  "urgency_score": 0.95,
-  "reasoning": "Customer in-airport with departure in 2 hours",
-  "time_to_resolve_target": "5 minutes"
-}
-```
-
-**Urgency Criteria**:
-- **Critical**: In-airport, departure <3 hours, already missed connection
-- **High**: In-transit, departure <24 hours
-- **Medium**: Departure 1-7 days
-- **Low**: Departure >7 days
-
-**Latency**: <500ms (GPT-4o mini)
-
-#### Category Classifier (GPT-4o mini)
-
-**Categories**:
-- Missed connection (self-transfer)
-- Schedule change (airline-initiated)
-- Cancellation (full/partial)
-- Ticket error
-- Multiple issues (compound)
-
-**Latency**: <500ms
-
-#### Priority Queue
-
-Redis sorted set, scored by:
-```python
-priority_score = urgency_score * 1000 + (current_time - event_time)
-```
-
-Ensures:
-- Most urgent cases processed first
-- FIFO within same urgency level
-- No starvation of lower-priority cases
+**Why this matters**: Agents typically hunt for information across multiple systems (bookings, flight status, policies, history). Automating context assembly could significantly reduce TTFR and ensure nothing is missed.
 
 ---
 
-### 3. Context Assembly (RAG)
+### 3. Intelligent Resolution Generation
 
-**Purpose**: Gather all information needed for decision-making
+**What it does**: Uses LLM to generate 2-4 valid resolution options with clear reasoning
 
-#### Data Sources & Retrieval
+**How it works** (conceptually):
+1. **Rule book**: Policies injected into LLM prompt (version controlled, easy to update)
+2. **Context synthesis**: LLM reviews all assembled information
+3. **Option generation**: Creates multiple valid solutions ranked by customer satisfaction, policy compliance, cost
+4. **Explainability**: Cites which rules apply, why each option is valid
 
-```mermaid
-flowchart LR
-    subgraph sources [Data Sources]
-        S1[Booking DB]
-        S2[Flight Status API]
-        S3[Policy KB]
-        S4[Case History DB]
-        S5[Customer DB]
-    end
-    
-    subgraph retrieval [Retrieval]
-        R1[Direct Query]
-        R2[Hybrid Search]
-        R3[Similarity Search]
-        R4[Cross-Reference]
-    end
-    
-    subgraph output [Assembled Context]
-        O1[Context Bundle]
-    end
-    
-    S1 -->|SQL| R1
-    S2 -->|API| R1
-    S5 -->|SQL| R1
-    S3 -->|BM25 + Vector| R2
-    S4 -->|Vector| R3
-    S1 -.verify.-> R4
-    S2 -.validate.-> R4
-    R1 --> O1
-    R2 --> O1
-    R3 --> O1
-    R4 --> O1
-```
+**Structured Output Includes**:
+- Resolution options (what to do)
+- Confidence scores (how certain is the LLM?)
+- Policy citations (which rules were applied)
+- Reasoning (why this option makes sense)
+- Uncertainty flags (missing data or edge cases)
+- Escalation triggers (when human judgment is needed)
 
-#### Booking Database Verification (MVP-Critical)
+**Critical Decision**: Prompt-injected rules vs hard-coded logic
+- **Choice**: Prompt injection (rules as text in the prompt)
+- **Why**: Faster iteration, easy to audit, no code changes for policy updates
+- **Trade-off**: Slightly less enforcement guarantee than hard-coded, but massively more flexible
 
-**Purpose**: Verify claim legitimacy and enable proactive detection
-
-**Key Functions**:
-1. **Verify customer claims**: Confirm booking exists and customer has standing
-2. **Cross-reference with Flight API**: Match booking flight numbers with real-time status
-3. **Proactive monitoring**: Detect issues before customer contacts support
-4. **Context enrichment**: Pull booking details (dates, routes, prices, class, guarantee status)
-5. **Fraud prevention**: Ensure claims match actual bookings
-
-**Data Retrieved**:
-- Booking ID and status
-- Flight numbers and segments
-- Passenger details
-- Guarantee purchase status
-- Booking value and payment info
-- Original booking timestamp
-
-**Cross-Reference Logic**:
-```python
-# When Flight API detects delay/cancellation:
-affected_bookings = booking_db.query(
-    flight_number=delayed_flight,
-    departure_date=affected_date,
-    status="confirmed"
-)
-# Proactively create cases for affected bookings
-```
-
-**Latency**: <500ms (indexed queries)
-
-#### Context Bundle Structure
-
-```json
-{
-  "case_id": "CASE_20260107_001",
-  "booking": {
-    "booking_id": "KW123456",
-    "flights": [...],
-    "guarantee_purchased": true,
-    "total_value": 450.00,
-    "currency": "EUR"
-  },
-  "flights": [
-    {
-      "flight_number": "BA123",
-      "status": "delayed",
-      "scheduled": "2026-01-07T14:00:00Z",
-      "estimated": "2026-01-07T16:30:00Z",
-      "delay_reason": "weather"
-    }
-  ],
-  "customer": {
-    "customer_id": "CUST_789",
-    "tier": "standard",
-    "previous_issues": 1,
-    "lifetime_value": 2300.00
-  },
-  "relevant_policies": [
-    {
-      "policy_id": "POL_001",
-      "title": "Pineapple Guarantee - Missed Connections",
-      "content": "...",
-      "relevance_score": 0.94
-    }
-  ],
-  "similar_cases": [
-    {
-      "case_id": "CASE_20251215_045",
-      "similarity": 0.88,
-      "resolution": "rebooking",
-      "outcome": "resolved",
-      "customer_satisfaction": 4.5
-    }
-  ]
-}
-```
-
-#### Policy Knowledge Base
-
-**Structure**:
-- Pineapple Guarantee terms (chunked by section)
-- Refund policies (by scenario)
-- Airline partner rules
-- Legal requirements (EU261, etc)
-- Internal guidelines
-
-**Indexing**:
-- Vector embeddings (bge-large-en-v1.5)
-- Keyword index (Elasticsearch)
-- Metadata filters (policy_type, region, effective_date)
-
-**Retrieval Strategy**:
-1. Hybrid search (vector + BM25, weighted 70/30)
-2. Retrieve top 10 candidates
-3. Rerank with cross-encoder
-4. Return top 5 with relevance scores
-
-**Latency Budget**: <1 second
+**Why this matters**: Agents need to review options quickly and confidently. Clear structure + reasoning = fast decisions. Confidence scores signal when to trust vs scrutinise.
 
 ---
 
-### 4. LLM Reasoning Engine
+### 4. Human Review & Decision
 
-**Purpose**: Generate resolution options with explanations
+**What it does**: Presents options to agent for review, approval, or modification
 
-#### Prompt-Injected Rule Book (MVP-Critical)
+**Agent sees**:
+- All context that was assembled (booking, flight status, policies, history)
+- LLM-generated resolution options with explanations
+- Confidence indicators (🟢 high, 🟡 medium, 🔴 low)
+- Ability to approve, modify, or reject any option
 
-**Purpose**: Enforce policy compliance through prompt engineering rather than hard-coded validation
+**Critical Decision**: 100% human-in-the-loop for MVP
+- **Why**: Build trust, collect training data, prove value before considering automation
+- **Future**: High-confidence cases could be auto-executed after validation period
 
-**Rule Book Structure**:
-```markdown
-# Pineapple Travel Customer Support Rule Book v1.0
-
-## RULE-001: Guarantee Coverage - Missed Connections
-IF customer purchased Pineapple Guarantee AND missed connection due to first flight delay
-THEN Pineapple Travel must provide rebooking at no additional cost to customer
-CITATION: Guarantee Terms Section 3.2
-
-## RULE-002: Weather Delays - Airline Responsibility
-IF delay caused by weather AND customer has not purchased Guarantee
-THEN airline is responsible, NOT Pineapple Travel (refer to airline policy)
-CITATION: Terms of Service Section 5.1
-
-## RULE-003: Refund Limits Without Guarantee
-IF customer did NOT purchase Guarantee AND requests refund
-THEN maximum refund is 70% of unused segment value
-CITATION: Refund Policy Section 2.3
-
-[... additional rules ...]
-```
-
-**Injection Method**:
-- Rules loaded from `rules/policy-rulebook.md` at runtime
-- Version controlled in git (track changes)
-- Prepended to system prompt before each LLM call
-- Each rule has unique ID for citation tracking
-
-**Benefits**:
-- ✅ Iterate rules without code changes
-- ✅ Auditable (rules visible in prompt logs)
-- ✅ LLM can cite specific rules in reasoning
-- ✅ Easy to A/B test rule formulations
-
-#### Option Generator (Claude 3.5 Sonnet)
-
-**Prompt Structure**:
-```
-You are an expert customer support agent for Pineapple Travel, specialising in 
-resolving complex virtual interlining failures.
-
-RULE BOOK (YOU MUST FOLLOW THESE RULES):
-{prompt_injected_rulebook}
-
-CURRENT SITUATION:
-{context_bundle}
-
-RELEVANT POLICIES:
-{retrieved_policies}
-
-SIMILAR PAST CASES:
-{similar_cases}
-
-TASK:
-Generate 2-4 resolution options ranked by:
-1. Customer satisfaction (prioritise their needs)
-2. Policy compliance (MUST be valid per rules above)
-3. Cost to Pineapple Travel (lower is better, but don't compromise #1)
-
-For each option provide:
-- Specific actions to take
-- Expected cost to Pineapple Travel
-- Expected customer satisfaction
-- Policy justification (cite specific RULE-XXX)
-- Pros and cons
-- Confidence score (0-100)
-- Uncertainty flags (if data missing or edge case)
-- Escalation reasoning (if human judgment needed)
-
-Format your response as JSON following this schema:
-{schema}
-```
-
-**Structured Output Schema** (MVP-Critical):
-```json
-{
-  "options": [
-    {
-      "option_id": 1,
-      "title": "Rebook on next available flight (BA789)",
-      "actions": [
-        "Book customer on BA789 departing 18:00",
-        "Provide lounge access voucher",
-        "Send SMS with new itinerary"
-      ],
-      "cost_to_pineapple": {
-        "amount": 125.00,
-        "currency": "EUR",
-        "breakdown": {
-          "rebooking_fee": 100.00,
-          "lounge_voucher": 25.00
-        }
-      },
-      "customer_satisfaction_estimate": 4.0,
-      "policy_justification": [
-        {
-          "rule_id": "RULE-001",
-          "policy_id": "POL_001",
-          "section": "3.2 Weather-Related Delays",
-          "quote": "Pineapple Travel will rebook on next available flight..."
-        }
-      ],
-      "pros": [
-        "Gets customer to destination same day",
-        "Covered by Guarantee (RULE-001)",
-        "Similar to past successful resolutions"
-      ],
-      "cons": [
-        "Cost to Pineapple Travel",
-        "4-hour delay for customer"
-      ],
-      "confidence": 89,
-      "reasoning": "High confidence because customer has Guarantee and similar cases resolved successfully. Flight BA789 availability confirmed.",
-      "uncertainty_flags": [
-        {
-          "type": "data_gap",
-          "description": "Customer dietary preferences unknown for lounge",
-          "impact": "low"
-        }
-      ],
-      "escalation_triggers": []
-    },
-    {
-      "option_id": 2,
-      "title": "Partial refund + self-booking assistance",
-      "actions": [
-        "Process 70% refund (€315)",
-        "Provide flight search assistance",
-        "Offer €50 voucher for future booking"
-      ],
-      "cost_to_pineapple": {
-        "amount": 365.00,
-        "currency": "EUR",
-        "breakdown": {
-          "refund": 315.00,
-          "voucher": 50.00
-        }
-      },
-      "customer_satisfaction_estimate": 3.2,
-      "policy_justification": [
-        {
-          "rule_id": "RULE-003",
-          "policy_id": "POL_002",
-          "section": "5.1 Refund Terms",
-          "quote": "Maximum 70% refund without Guarantee..."
-        }
-      ],
-      "pros": [
-        "Lower cost than full rebooking",
-        "Customer has flexibility"
-      ],
-      "cons": [
-        "Customer must handle rebooking",
-        "Lower satisfaction expected"
-      ],
-      "confidence": 65,
-      "reasoning": "Medium confidence. Customer has Guarantee so RULE-001 applies better, but this is valid fallback if rebooking unavailable.",
-      "uncertainty_flags": [],
-      "escalation_triggers": [
-        {
-          "reason": "customer_has_guarantee",
-          "severity": "medium",
-          "recommendation": "Option 1 preferred per RULE-001"
-        }
-      ]
-    }
-  ],
-  "recommended_option_id": 1,
-  "overall_confidence": 89,
-  "escalation_recommended": false,
-  "escalation_reasoning": "High confidence, clear rule application (RULE-001), sufficient data available",
-  "reasoning_trace": "Customer purchased Guarantee. RULE-001 applies: must provide rebooking. Flight BA789 available and suitable. Cost reasonable. High confidence in Option 1."
-}
-```
-
-**Structured Output Benefits** (MVP-Critical):
-
-1. **Fast Agent Review**: 
-   - Standardised format reduces cognitive load
-   - Key metrics visible at a glance (confidence, cost, satisfaction)
-   - Enables <90 second review time
-
-2. **Confidence Transparency**:
-   - 0-100 scale easy to interpret
-   - Agents know when to scrutinize vs trust
-   - Future autonomy: high confidence candidates
-
-3. **Uncertainty Surfaced**:
-   - Missing data explicitly flagged
-   - Edge cases identified
-   - Agents can request additional info
-
-4. **Escalation Reasoning**:
-   - Clear triggers for human judgment
-   - Severity levels guide prioritisation
-   - Explains why option may not be ideal
-
-5. **Policy Citations**:
-   - Rule IDs enable audit trail
-   - Agents can verify compliance
-   - Builds trust in system
-
-6. **Metrics Tracking**:
-   - Structured data enables analytics
-   - Track confidence calibration
-   - Measure approval rates by field
-
-**Validation**:
-- Policy Validator checks each option against hard rules
-- Cost Validator ensures within authorization limits
-- Feasibility Validator checks flight availability (API calls)
-- Schema Validator ensures all required fields present
-
-**Latency Budget**: <3 seconds
+**Why this matters**: Agents are the customer champions. The system augments their judgment, doesn't replace it. They always have final say.
 
 ---
 
-### 5. Human Interface
+### 5. Execution & Learning
 
-#### Agent Dashboard
+**What it does**: Executes approved resolutions and logs everything for continuous improvement
 
-**Key Features**:
-1. **Case Queue**
-   - Sorted by urgency
-   - Color-coded by confidence (🟢🟡🔴)
-   - Click to view full context
+**Execution**: 
+- Rebooking through airline APIs
+- Refund processing
+- Customer notifications (SMS, email)
+- Track completion and customer response
 
-2. **Case Detail View**
-   - Customer info + timeline
-   - Full context displayed (booking, flights, policies)
-   - LLM-generated options with confidence
-   - Side-by-side comparison of options
+**Learning Loop**:
+- Log every decision: what LLM suggested, what agent chose, what outcome resulted
+- Track metrics: approval rates, confidence calibration, cost accuracy, customer satisfaction
+- Generate insights: Improve prompts, identify patterns, refine rules
+- Close the loop: Better suggestions over time
 
-3. **Decision Interface**
-   - Approve option (click to execute)
-   - Modify option (edit before executing)
-   - Reject all (escalate to human brainstorming)
-   - Request more info (trigger additional research)
-
-4. **Communication Panel**
-   - Template messages (auto-populated)
-   - Send to customer (email/SMS/chat)
-   - Real-time typing indicator
-
-**Mockup Wireframe**:
-```
-┌─────────────────────────────────────────────────────────────┐
-│ Case Queue                                    [Filters ▼]    │
-├─────────────────────────────────────────────────────────────┤
-│ 🔴 CASE_001 | Missed connection | In airport | 2 min ago   │
-│ 🟡 CASE_002 | Schedule change  | Departs 4h  | 5 min ago   │
-│ 🟢 CASE_003 | Ticket error     | Departs 2d  | 12 min ago  │
-└─────────────────────────────────────────────────────────────┘
-
-┌─────────────────────────────────────────────────────────────┐
-│ CASE_001: Missed connection - BA123 → EI456                 │
-├─────────────────────────────────────────────────────────────┤
-│ Customer: Jane Doe (Tier: Standard, 1st issue)              │
-│ Status: In Dublin airport, waiting for connecting flight    │
-│ BA123 delayed 2.5h (weather) → missed EI456 to London       │
-│                                                              │
-│ 🤖 AI Suggestions (Confidence: 🟢 High - 89%)               │
-│                                                              │
-│ ✅ Option 1: Rebook on BA789 (18:00) + lounge              │
-│    Cost: €125  |  Est. CSAT: 4.0/5  |  Same-day arrival   │
-│    Policy: Covered by Guarantee (Section 3.2)               │
-│    [View Details] [Approve] [Modify]                        │
-│                                                              │
-│ ⭕ Option 2: Refund €315 (70%) + rebooking advice          │
-│    Cost: €315  |  Est. CSAT: 3.2/5  |  Customer self-books│
-│    Policy: Standard refund per terms 5.1                    │
-│    [View Details] [Approve] [Modify]                        │
-│                                                              │
-│ [Reject All - Escalate to Senior Agent]                     │
-└─────────────────────────────────────────────────────────────┘
-```
+**Why this matters**: Every interaction is training data. The system gets smarter by learning from agent decisions and customer outcomes.
 
 ---
 
-### 6. Execution Layer
+## Key Design Principles
 
-**Purpose**: Execute approved resolutions
-
-**Services**:
-- **Rebooking Service**: Book new flights via airline APIs
-- **Refund Processor**: Initiate refunds through payment system
-- **Notification Service**: Send SMS/email/push to customer
-- **Audit Logger**: Record all actions with timestamps
-
-**Transaction Handling**:
-- All operations logged before execution
-- Idempotency keys prevent duplicate bookings
-- Rollback capability if partial failure
-- Customer notified at each step
+1. **Graceful degradation**: If any component fails, agent can still work (system doesn't block humans)
+2. **Transparency**: Agent sees everything the system sees
+3. **Auditability**: Every decision logged with full context
+4. **Composability**: Components can be reused for other use cases (customer-facing apps, different channels)
 
 ---
-
-### 7. Learning & Analytics
-
-**Purpose**: Track outcomes, improve model, measure impact
-
-#### Decision Logger
-
-Logs every case:
-```json
-{
-  "case_id": "CASE_20260107_001",
-  "timestamp": "2026-01-07T15:22:00Z",
-  "context": {...},
-  "llm_suggestions": [...],
-  "agent_decision": {
-    "selected_option_id": 1,
-    "modifications": null,
-    "approval_time_seconds": 45
-  },
-  "execution_result": "success",
-  "customer_satisfaction": 4.5,
-  "resolution_cost": 125.00,
-  "time_to_first_resolution_seconds": 180
-}
-```
-
-#### Model Evaluator
-
-**Weekly Analysis**:
-- Agent approval rate by case type
-- Confidence calibration (are high-confidence cases actually approved more?)
-- Cost accuracy (estimated vs actual)
-- CSAT prediction accuracy
-- Identify systematic errors
-
-**Output**: Recommendations for prompt tuning, policy updates, escalation criteria
-
----
-
 ## Data Flows
 
 ### Flow 1: Proactive Detection (Flight Delay)
@@ -827,10 +371,10 @@ sequenceDiagram
     AG->>CU: Executes + confirms
 ```
 
-**Latency**:
-- Customer wait time: <5 seconds for first response template
-- Agent decision time: 30-60 seconds (vs 5-10 min without system)
-- **Total TTFR: <90 seconds** (vs 10-15 min baseline)
+**Target Experience**:
+- Customer wait time: Near-instant for first response template
+- Agent decision time: Significantly faster with pre-assembled context
+- **Goal**: Dramatic reduction in TTFR through automated context assembly
 
 ---
 
