@@ -15,7 +15,7 @@ Building an agent-assisted system for resolving virtual interlining failures at 
 
 ## Initial Questions & Answers
 
-### Detection & Categorization
+### Detection & Categorisation
 
 **Q: How does the system know a failure is happening?**
 A: Multiple triggers:
@@ -24,15 +24,15 @@ A: Multiple triggers:
 - Proactive monitoring of bookings
 
 **Q: What failure types matter most?**
-A: **Urgency-based prioritization**, not category-based:
+A: **Urgency-based prioritisation**, not category-based:
 - Ticket error 4 weeks out = low urgency
 - Missed connection (person in airport/in air) = high urgency
 - Time-to-resolve is the key metric
 
-**Q: Should categorization happen before or after customer contact?**
+**Q: Should categorisation happen before or after customer contact?**
 A: **Both**:
-- Before: If we detect a problem via API, categorize and proactively reach out
-- After: If customer initiates, categorize their issue immediately
+- Before: If we detect a problem via API, categorise and proactively reach out
+- After: If customer initiates, categorise their issue immediately
 
 ### Context Gathering
 
@@ -116,7 +116,7 @@ A: **Both**:
 
 ### Detection & Triage
 - Event Processor
-- Urgency Scorer (time-sensitive prioritization)
+- Urgency Scorer (time-sensitive prioritisation)
 - Category Classifier
 
 ### Context Assembly (RAG)
@@ -358,11 +358,11 @@ With 1 day before sharing GitHub, need to show:
 - Predictive features:
   - Risk scoring at booking time (show upfront)
   - Pre-emptive rebooking (before disruption happens)
-  - Smart routing recommendations (optimize price/risk/convenience)
+  - Smart routing recommendations (optimise price/risk/convenience)
 - Shift from reactive support → proactive travel assistance
 
 **3. Multi-Agent Systems** (Phase 4)
-- Beyond single LLM → specialized agents working together
+- Beyond single LLM → specialised agents working together
 - Negotiation agent (talks to airlines)
 - Personalization agent (learns preferences)
 - Sentiment agent (detects frustration, escalates)
@@ -393,7 +393,7 @@ With 1 day before sharing GitHub, need to show:
 **Technical Maturity Path**:
 - Single-agent RAG → Multi-model orchestration → Predictive systems → Multi-agent collaboration → Platform
 
-### Innovation Highlights to Emphasize
+### Innovation Highlights to Emphasise
 
 1. **Proactive not reactive** (industry standard: wait for complaints)
 2. **Transparent AI** (not black box)
@@ -421,10 +421,10 @@ With 1 day before sharing GitHub, need to show:
 ### Next Steps (Tomorrow)
 1. Review roadmap with fresh eyes
 2. Refine phases (too ambitious? Missing pieces?)
-3. Prioritize "must show" vs "nice to have"
+3. Prioritise "must show" vs "nice to have"
 4. Validate assumptions (are these good ideas?)
 5. More brainstorming on specific features
-6. Decide what to emphasize in interview
+6. Decide what to emphasise in interview
 
 ### Why This Matters
 Shows interviewer:

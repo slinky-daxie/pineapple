@@ -34,7 +34,7 @@
 4. **Demo scenario**
    - 3-4 realistic failure scenarios from research
    - Show system handling each case type
-   - Demonstrate urgency-based prioritization
+   - Demonstrate urgency-based prioritisation
 
 ### Out of Scope (Acknowledge, Don't Build)
 - Real-time flight API integration
@@ -438,7 +438,7 @@ Local development:
 │                                           │
 │ Key Principles:                           │
 │ ✓ Human augmentation (not replacement)    │
-│ ✓ Urgency-based prioritization           │
+│ ✓ Urgency-based prioritisation           │
 │ ✓ Explainable by design                  │
 │ ✓ Start conservative, learn, scale       │
 └───────────────────────────────────────────┘
@@ -507,7 +507,7 @@ Local development:
 - "This is how you responsibly deploy AI in high-stakes situations"
 
 ### Technical Depth
-- "Multi-model strategy optimizes for speed, cost, quality"
+- "Multi-model strategy optimises for speed, cost, quality"
 - "RAG before fine-tuning - learn what to fine-tune on"
 - "Hybrid search for semantic + exact matching"
 - "Confidence calibration enables safe autonomy later"

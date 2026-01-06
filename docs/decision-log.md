@@ -15,7 +15,7 @@ This document records all major LLM and AI architecture decisions, including rat
 Need to process customer support cases involving complex virtual interlining failures. Different components have different requirements (speed, cost, reasoning depth).
 
 ### Decision
-Use **multiple specialized LLMs** rather than one model for everything:
+Use **multiple specialised LLMs** rather than one model for everything:
 - GPT-4o mini for urgency classification
 - Claude 3.5 Sonnet for resolution reasoning
 - Open-source embeddings for RAG retrieval
@@ -45,8 +45,8 @@ Use **multiple specialized LLMs** rather than one model for everything:
 ### Trade-offs
 - **Complexity**: Managing multiple models vs simpler single-model
 - **Vendor risk**: Dependent on OpenAI + Anthropic
-- **Cost**: Optimized cost structure vs predictability
-- **Verdict**: Optimization worth the complexity
+- **Cost**: Optimised cost structure vs predictability
+- **Verdict**: Optimisation worth the complexity
 
 ### Success Criteria
 - Classification accuracy >95%
@@ -135,7 +135,7 @@ Use **RAG (Retrieval-Augmented Generation)** in MVP, defer fine-tuning to Phase 
 
 3. **Hybrid: RAG + few-shot fine-tune**
    - Pros: Best of both worlds
-   - Cons: Complexity, premature optimization
+   - Cons: Complexity, premature optimisation
    - Why not chosen: Save for Phase 2 after validation
 
 ### Trade-offs
@@ -182,7 +182,7 @@ Use **open-source embedding model** (bge-large-en-v1.5 or gte-large) hosted inte
    - Why not chosen: Open-source eliminates these issues
 
 3. **Train custom embeddings**
-   - Pros: Optimized for Pineapple Travel domain
+   - Pros: Optimised for Pineapple Travel domain
    - Cons: Need training data, expertise, time
    - Why not chosen: Premature—use off-the-shelf first
 
@@ -364,7 +364,7 @@ Implement **three-tier confidence system**:
 
 ### Rationale
 - **Transparency**: Agents know when to trust vs scrutinize
-- **Prioritization**: Agents can tackle low-confidence cases first
+- **Prioritisation**: Agents can tackle low-confidence cases first
 - **Safety**: Clear signal when LLM uncertain
 - **Future autonomy**: High-confidence candidates for auto-resolution
 
@@ -381,7 +381,7 @@ Implement **three-tier confidence system**:
 
 3. **No confidence scores** (treat all suggestions equally)
    - Pros: Simplest
-   - Cons: Agents can't prioritize, no safety signal
+   - Cons: Agents can't prioritise, no safety signal
    - Why not chosen: Dangerous to hide uncertainty
 
 ### Trade-offs
@@ -476,7 +476,7 @@ Use **prompt-injected rule book** where policies and compliance rules are passed
 
 ### Multi-Language Support (Phase 3)
 - Translate policies or use multilingual models?
-- Which languages to prioritize?
+- Which languages to prioritise?
 - How to maintain quality across languages?
 
 ### Advanced Features (Future)

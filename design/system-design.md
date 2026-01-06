@@ -34,7 +34,7 @@ An LLM-powered agent-assistance system that:
 
 ### Key Principles
 1. **Human augmentation, not replacement**
-2. **Urgency-based prioritization** (not category-based)
+2. **Urgency-based prioritisation** (not category-based)
 3. **Explainability by default**
 4. **Conservative start, gradual autonomy**
 5. **Continuous learning from human decisions**
@@ -232,7 +232,7 @@ flowchart TB
 
 ### 2. Detection & Triage
 
-**Purpose**: Identify failures, assess urgency, categorize, and prioritize
+**Purpose**: Identify failures, assess urgency, categorise, and prioritise
 
 #### Urgency Scorer (GPT-4o mini)
 
@@ -474,7 +474,7 @@ CITATION: Refund Policy Section 2.3
 
 **Prompt Structure**:
 ```
-You are an expert customer support agent for Pineapple Travel, specializing in 
+You are an expert customer support agent for Pineapple Travel, specialising in 
 resolving complex virtual interlining failures.
 
 RULE BOOK (YOU MUST FOLLOW THESE RULES):
@@ -491,7 +491,7 @@ SIMILAR PAST CASES:
 
 TASK:
 Generate 2-4 resolution options ranked by:
-1. Customer satisfaction (prioritize their needs)
+1. Customer satisfaction (prioritise their needs)
 2. Policy compliance (MUST be valid per rules above)
 3. Cost to Pineapple Travel (lower is better, but don't compromise #1)
 
@@ -614,7 +614,7 @@ Format your response as JSON following this schema:
 **Structured Output Benefits** (MVP-Critical):
 
 1. **Fast Agent Review**: 
-   - Standardized format reduces cognitive load
+   - Standardised format reduces cognitive load
    - Key metrics visible at a glance (confidence, cost, satisfaction)
    - Enables <90 second review time
 
@@ -630,7 +630,7 @@ Format your response as JSON following this schema:
 
 4. **Escalation Reasoning**:
    - Clear triggers for human judgment
-   - Severity levels guide prioritization
+   - Severity levels guide prioritisation
    - Explains why option may not be ideal
 
 5. **Policy Citations**:
@@ -890,7 +890,7 @@ sequenceDiagram
 
 **Booking System Down**:
 - Queue cases until system recovers
-- Prioritize by urgency when back online
+- Prioritise by urgency when back online
 - Manual workaround: Agent can enter data manually
 
 **Flight API Down**:

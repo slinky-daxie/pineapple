@@ -300,7 +300,7 @@ How satisfied were you with the resolution of your recent issue?
 **Baseline**: €180 per case (from finance estimate)
 
 **Target**:
-- MVP: <€200 (allow for LLM cost, optimize later)
+- MVP: <€200 (allow for LLM cost, optimise later)
 - Phase 2: <€150 (better option selection)
 
 **Watch for**:
@@ -322,7 +322,7 @@ How satisfied were you with the resolution of your recent issue?
 
 **Investigation**: 
 - Manual review of 100% of repeat contacts
-- Categorize reasons
+- Categorise reasons
 - Feed back into prompt improvements
 
 #### 6. Agent Cognitive Load (Qualitative)
@@ -435,7 +435,7 @@ Example:
 **Process**:
 1. Automatically flag: confidence <0.4 OR agent rejected OR CSAT <3
 2. Manual review (PM + senior agent)
-3. Categorize: 
+3. Categorise: 
    - LLM limitation (needs better prompt/model)
    - Data quality (missing flight info)
    - Truly unsolvable (no good options)
@@ -480,7 +480,7 @@ flowchart LR
 
 #### If Agent Approval Rate Drops:
 1. Review rejected cases (sample 50)
-2. Categorize rejection reasons:
+2. Categorise rejection reasons:
    - Policy misinterpretation → Update prompt with clarification
    - Cost too high → Adjust cost weighting in prompt
    - Missing option agents wanted → Add to few-shot examples
@@ -513,7 +513,7 @@ flowchart LR
 
 **Output**:
 - Written report for leadership
-- 3-5 prioritized improvements for next month
+- 3-5 prioritised improvements for next month
 - Decision: Ready for Phase 2 autonomy? (gate criteria)
 
 ---
@@ -594,7 +594,7 @@ System helped you save ~2.5 hours today 🎉
 
 ❌ **P-hacking**: Testing 20 variations, promoting the 1 that randomly worked
 
-❌ **Short-term optimization**: Boosting approval rate by always suggesting cheapest option (hurts CSAT)
+❌ **Short-term optimisation**: Boosting approval rate by always suggesting cheapest option (hurts CSAT)
 
 ✅ **Instead**: Balanced scorecard, real-world validation, qualitative + quantitative, long-term thinking
 

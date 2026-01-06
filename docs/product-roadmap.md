@@ -345,7 +345,7 @@ Last updated: 2 min ago
 
 ### Multi-Agent System Architecture
 
-**Beyond single LLM** → Specialized agents working together
+**Beyond single LLM** → Specialised agents working together
 
 #### Agent Roles
 
@@ -374,7 +374,7 @@ Customer missed connection (airline fault)
 ```
 Customer history: Always picks window seat, prefers morning flights
 Rebooking needed
-→ Personalization Agent prioritizes:
+→ Personalisation Agent prioritises:
   - Morning flight options first
   - Reserves window seat automatically
   - Filters out red-eye flights
@@ -571,7 +571,7 @@ Insurance company uses API:
 - Human approval for all
 
 **Phase 2**: Multi-model orchestration
-- Specialized models for specialized tasks
+- Specialised models for specialised tasks
 - Confidence-based routing
 - Selective automation
 
@@ -581,7 +581,7 @@ Insurance company uses API:
 - Event-driven architecture
 
 **Phase 4**: Multi-agent collaboration
-- Autonomous agents with specialized roles
+- Autonomous agents with specialised roles
 - Agent-to-agent communication
 - Complex orchestration
 
@@ -646,7 +646,7 @@ Insurance company uses API:
 **Phase 1-2**:
 - ⚠️ Agents don't trust system → Mitigation: Full transparency, human override
 - ⚠️ LLM makes mistakes → Mitigation: Human review, validation layers
-- ⚠️ Costs exceed budget → Mitigation: Caching, batch processing, model optimization
+- ⚠️ Costs exceed budget → Mitigation: Caching, batch processing, model optimisation
 
 **Phase 3-4**:
 - ⚠️ Predictions wrong → Mitigation: Conservative thresholds, human fallback
@@ -700,6 +700,6 @@ Insurance company uses API:
 ---
 
 *Document Status*: Draft for review
-*Next Steps*: Review, refine, prioritize, validate assumptions
+*Next Steps*: Review, refine, prioritise, validate assumptions
 *Owner*: Product Team + Engineering + Customer Success
 
